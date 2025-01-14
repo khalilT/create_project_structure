@@ -35,6 +35,8 @@ venv/
 !/data/.gitkeep
 
 # Ignore Jupyter Notebook checkpoints
+/notebooks/*
+!notebooks/.gitkeep
 **/.ipynb_checkpoints/
 
 # Ignore metadata generation
