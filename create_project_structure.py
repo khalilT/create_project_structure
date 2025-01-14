@@ -100,9 +100,16 @@ import platform
 import sys
 from datetime import datetime
 import pkg_resources
+import subprocess  # Added to execute R commands
+
 
 def generate_session_info():
     """Generate session info including Python version, platform, and more."""
+    # Retrieve R version and session information
+    try:
+        r_version = subprocess.check_output(["R", "--version"], text=True).strip().split("\n")[0]
+    except FileNotFoundError:
+        r_version = "R is not installed or not found in PATH."
     info = {
         "Python Version": sys.version,
         "Platform": platform.platform(),
@@ -110,6 +117,7 @@ def generate_session_info():
         "Architecture": platform.architecture()[0],
         "Processor": platform.processor(),
         "Generated On": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "R Version": r_version,  # Add R version to the metadata
     }
     return info
 
@@ -200,4 +208,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
