@@ -18,8 +18,9 @@ def create_folder_structure(base_dir):
     init_file = os.path.join(base_dir, "src", "__init__.py")
     with open(init_file, "w") as f:
         f.write("# src package initialization\n")
+    print("Folder structure created, including __init__.py for src.")
 
-    # Add .gitignore file
+   # Add .gitignore file
     gitignore_content = '''# Ignore Python cache files
 __pycache__/
 *.pyc
@@ -49,9 +50,7 @@ Thumbs.db'''
     gitignore_file = os.path.join(base_dir, ".gitignore")
     with open(gitignore_file, "w") as f:
         f.write(gitignore_content)
-
-    print("Folder structure created, including __init__.py and .gitignore.")
-
+    print("Folder structure created, including __init__.py for src and .gitignore.")
 
 def create_paths_py(src_utils_dir):
     """Creates the paths.py file in src/utils."""
@@ -76,108 +75,100 @@ def get_path(name):
     with open(paths_file, "w") as f:
         f.write(paths_content)
     print("paths.py created.")
-
-
+    
 def create_functions_py(src_utils_dir):
     """Creates the functions.py file in src/utils."""
-    functions_content = '''# Module containing utility functions
-'''
-    functions_file = os.path.join(src_utils_dir, "functions.py")
-    with open(functions_file, "w") as f:
-        f.write(functions_content)
+    paths_content = '''#module containing functions
+    '''
+    paths_file = os.path.join(src_utils_dir, "functions.py")
+    with open(paths_file, "w") as f:
+        f.write(paths_content)
     print("functions.py created.")
-
-
+    
 def create_constants_py(src_utils_dir):
     """Creates the constants.py file in src/utils."""
-    constants_content = '''# Module containing project constants
-'''
-    constants_file = os.path.join(src_utils_dir, "constants.py")
-    with open(constants_file, "w") as f:
-        f.write(constants_content)
+    paths_content = '''#module containing constants
+    '''
+    paths_file = os.path.join(src_utils_dir, "constants.py")
+    with open(paths_file, "w") as f:
+        f.write(paths_content)
     print("constants.py created.")
-
 
 def create_generate_readme_info(base_dir):
     """Creates the generate_readme_info.py script in the base directory."""
-    readme_generator_content = '''import os
+    readme_generator_content = '''
+import os
 import platform
 import sys
 from datetime import datetime
-import subprocess
+import pkg_resources
+import subprocess  # Added to execute R commands
 
-# Use importlib.metadata instead of deprecated pkg_resources
-try:
-    from importlib.metadata import distributions
-except ImportError:
-    distributions = None
 
 def generate_session_info():
     """Generate session info including Python version, platform, and more."""
+    # Retrieve R version and session information
     try:
-        raw = subprocess.check_output(["R", "--version"], text=True)
-        # e.g. "R version 4.2.1 (2022-06-23)"
-        first_line = raw.splitlines()[0]
-        version_token = first_line.split()[2]
-        r_version = f"{first_line} (parsed: {version_token})"
+        r_version = subprocess.check_output(["R", "--version"], text=True).strip().split("\n")[0]
     except FileNotFoundError:
         r_version = "R is not installed or not found in PATH."
-    except subprocess.CalledProcessError as e:
-        r_version = f"Error calling R: {e}"
-
     info = {
-        "Python Version": sys.version.replace("\\n", " "),
+        "Python Version": sys.version,
         "Platform": platform.platform(),
         "OS": platform.system(),
         "Architecture": platform.architecture()[0],
         "Processor": platform.processor(),
         "Generated On": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "R Version": r_version,
+        "R Version": r_version,  # Add R version to the metadata
     }
     return info
 
 def generate_requirements(output_path="requirements.txt"):
     """Generate a requirements.txt file for the current environment."""
-    if distributions is None:
-        # Fallback to pip freeze for older Pythons
-        reqs = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
-        lines = reqs.splitlines()
-    else:
-        pkgs = [(dist.metadata["Name"], dist.version) for dist in distributions()]
-        lines = [f"{name}=={version}" for name, version in sorted(pkgs, key=lambda x: x[0].lower())]
-
+    installed_packages = sorted(
+        [(d.project_name, d.version) for d in pkg_resources.working_set],
+        key=lambda x: x[0].lower()
+    )
     with open(output_path, "w") as f:
-        for line in lines:
-            f.write(line + "\\n")
+        for package, version in installed_packages:
+            f.write(f"{package}=={version}\\n")
     print(f"Requirements file generated at {output_path}")
 
 def generate_readme_content(readme_template_path, output_path):
     """Generate README.md with session info included."""
+    # Load the base README template
     with open(readme_template_path, "r") as f:
         readme_content = f.read()
-
+    
+    # Generate session info
     session_info = generate_session_info()
     session_info_text = "\\n".join(f"- **{key}**: {value}" for key, value in session_info.items())
-
-    readme_content += "\\n\\n## **Session Info**\\n\\n" + session_info_text
-
+    
+    # Append session info to the README
+    readme_content += "\\n\\n## **Session Info**\\n\\n"
+    readme_content += session_info_text
+    
+    # Write the updated README content to a file
     with open(output_path, "w") as f:
         f.write(readme_content)
     print(f"README file generated at {output_path}")
 
 if __name__ == "__main__":
+    # Paths for the README template and output
     TEMPLATE_PATH = "README_template.md"
     README_PATH = "README.md"
     REQUIREMENTS_PATH = "requirements.txt"
-
+    
+    # Generate requirements.txt
     generate_requirements(REQUIREMENTS_PATH)
+    
+    # Generate README.md
     generate_readme_content(TEMPLATE_PATH, README_PATH)
 '''
     readme_generator_file = os.path.join(base_dir, "generate_readme_info.py")
     with open(readme_generator_file, "w") as f:
         f.write(readme_generator_content)
     print("generate_readme_info.py created.")
-
 
 def create_readme_template(base_dir):
     """Creates the README_template.md file in the base directory."""
@@ -195,4 +186,29 @@ This project simplifies data handling with centralized path management.
    ```bash
    git clone https://github.com/yourusername/yourproject.git
    cd yourproject
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+'''
+    readme_template_file = os.path.join(base_dir, "README_template.md")
+    with open(readme_template_file, "w") as f:
+        f.write(readme_template_content)
+    print("README_template.md created.")
+
+def main():
+    base_dir = os.getcwd()
+
+    create_folder_structure(base_dir)
+    create_paths_py(os.path.join(base_dir, "src", "utils"))
+    create_functions_py(os.path.join(base_dir, "src", "utils"))
+    create_constants_py(os.path.join(base_dir, "src", "utils"))
+    create_generate_readme_info(base_dir)
+    create_readme_template(base_dir)
+    print("Project setup complete.")
+
+if __name__ == "__main__":
+    main()
+
 
